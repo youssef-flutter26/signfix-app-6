@@ -46,6 +46,12 @@
 				</dict>
 			</array>
 		</dict>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>SignFix needs access to your photo library so you can select and upload images of your device, repair issues, and service-related documents.</string>
+
+<key>NSCameraUsageDescription</key>
+<string>SignFix needs access to your camera so you can take photos of your device, damaged parts, and repair-related issues to share with technicians.</string>
+
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
