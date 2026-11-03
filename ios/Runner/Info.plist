@@ -46,13 +46,15 @@
 				</dict>
 			</array>
 		</dict>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>SignFix needs access to your photo library so you can select and upload images of your device, repair issues, and service-related documents.</string>
-
-<key>NSCameraUsageDescription</key>
-<string>SignFix needs access to your camera so you can take photos of your device, damaged parts, and repair-related issues to share with technicians.</string>
-
 	</dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SignFix needs access to your photo library so you can select and upload images of your device, repair issues, and service-related documents.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SignFix needs access to your camera so you can take photos of your device, damaged parts, and repair-related issues to share with technicians.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SignFix needs your location to show nearby services and track technicians accurately.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SignFix needs your location to provide continuous tracking and location-based updates.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
