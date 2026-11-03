@@ -323,7 +323,7 @@ class _Dashboard extends StatefulWidget {
 class _DashboardState extends State<_Dashboard> {
   late Future<List<dynamic>> _ordersFuture;
   late Future<List<dynamic>> _servicesFuture;
-  late Future<Map<String, dynamic>> _profileFuture;
+  late Future<Map<String, dynamic>?> _profileFuture;
 
   final PageController _bannerCtrl = PageController();
   int _bannerPage = 0;
@@ -471,7 +471,7 @@ class _DashboardState extends State<_Dashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Greeting with animated text ──────────────────────────────────
-                    FutureBuilder<Map<String, dynamic>>(
+                    FutureBuilder<Map<String, dynamic>?>(
                       future: _profileFuture,
                       builder: (_, snap) {
                         if (snap.hasError) return _errorWidget(snap.error!);
@@ -745,11 +745,24 @@ class _PromoBannerSlider extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
   final ValueChanged<String> onBannerTap;
 
-  // ── Per-banner badge config ─────────────────────────────────────────────────
+  // ── Per-banner badge config (Matched 100% precisely with Sumit's instructions) ──
   static Map<String, ({IconData icon, String label, Color color})> _badgeConfig(
       String id) {
     switch (id) {
-      case 'home_banner_2':
+      case 'home_banner_1': // Neon Banner -> "use shop button"
+        return {
+          'top': (
+            icon: Icons.savings_outlined,
+            label: '₹200 Cashback Offer',
+            color: AppColors.success
+          ),
+          'cta': (
+            icon: Icons.shopping_cart_outlined,
+            label: 'Shop Now',
+            color: AppColors.gold
+          ),
+        };
+      case 'home_banner_2': // Signage Banner -> "use design button"
         return {
           'top': (
             icon: Icons.palette_outlined,
@@ -762,7 +775,8 @@ class _PromoBannerSlider extends StatelessWidget {
             color: AppColors.gold
           ),
         };
-      case 'home_banner_3':
+      case 'home_banner_3': // Power Supply Banner -> "use last button that's going on pending"
+      default:
         return {
           'top': (
             icon: Icons.bolt_outlined,
@@ -772,19 +786,6 @@ class _PromoBannerSlider extends StatelessWidget {
           'cta': (
             icon: Icons.electrical_services_outlined,
             label: 'Browse Drivers',
-            color: AppColors.gold
-          ),
-        };
-      default: // home_banner_1
-        return {
-          'top': (
-            icon: Icons.savings_outlined,
-            label: '₹200 Cashback Offer',
-            color: AppColors.success
-          ),
-          'cta': (
-            icon: Icons.shopping_cart_outlined,
-            label: 'Shop Now',
             color: AppColors.gold
           ),
         };
