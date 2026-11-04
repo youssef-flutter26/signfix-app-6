@@ -71,22 +71,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
       builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 40, height: 4,
-              decoration: BoxDecoration(color: AppColors.cardBorder,
+          Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: AppColors.cardBorder,
                   borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 14),
           const Text('Profile Photo',
-              style: TextStyle(color: AppColors.navy,
-                  fontWeight: FontWeight.w800, fontSize: 16)),
+              style: TextStyle(
+                  color: AppColors.navy,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16)),
           const SizedBox(height: 10),
           ListTile(
-            leading: const Icon(Icons.camera_alt_outlined, color: AppColors.gold),
+            leading:
+                const Icon(Icons.camera_alt_outlined, color: AppColors.gold),
             title: const Text('Take Photo',
                 style: TextStyle(color: AppColors.charcoal)),
             onTap: () => Navigator.pop(context, ImageSource.camera),
           ),
           ListTile(
-            leading: const Icon(Icons.photo_library_outlined, color: AppColors.info),
+            leading:
+                const Icon(Icons.photo_library_outlined, color: AppColors.info),
             title: const Text('Choose from Gallery',
                 style: TextStyle(color: AppColors.charcoal)),
             onTap: () => Navigator.pop(context, ImageSource.gallery),
@@ -107,10 +114,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final pass = _password.text;
     final confirm = _confirm.text;
 
-    if (_photoPath == null || _photoPath!.isEmpty) {
-      setState(() => _error = 'Profile photo is required. Please add your photo.');
-      return;
-    }
+    // Profile photo is optional now as requested in the spec
     if (name.isEmpty) {
       setState(() => _error = 'Full name is required.');
       return;
@@ -132,7 +136,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     final cleanDigits = phone.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
-    // +91 XXXXXXXXXX → "91" + 10 digits = 12 total
     final numberAfter91 =
         cleanDigits.startsWith('91') ? cleanDigits.substring(2) : cleanDigits;
     final mobileForBackend = '+91$numberAfter91';
@@ -146,14 +149,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _error = 'Password is required.');
       return;
     }
-    if (pass.length < 10) {
-      setState(() => _error = 'Password must be at least 10 characters.');
-      return;
-    }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,72}$')
-        .hasMatch(pass)) {
-      setState(() => _error =
-          'Password must include uppercase, lowercase, a number, and a special character.');
+    // Password validation updated to 6-8 characters per spec requirements
+    if (pass.length < 6 || pass.length > 8) {
+      setState(() => _error = 'Password must be between 6 and 8 characters.');
       return;
     }
     if (confirm.isEmpty) {
@@ -226,7 +224,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: AppColors.softGray,
                               border: Border.all(
                                 color: _photoPath == null
-                                    ? AppColors.danger.withValues(alpha: .7)
+                                    ? AppColors.gold.withValues(alpha: .4)
                                     : AppColors.gold.withValues(alpha: .6),
                                 width: 2,
                               ),
@@ -263,11 +261,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Center(
                       child: Text(
                         _photoPath == null
-                            ? 'Profile Photo Required *'
+                            ? 'Profile Photo (Optional)'
                             : 'Photo Added ✓',
                         style: TextStyle(
                           color: _photoPath == null
-                              ? AppColors.danger
+                              ? AppColors.textMuted
                               : AppColors.success,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -289,7 +287,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         'Join SignFix to order sign boards\nand request service.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: AppColors.textLight, // ✅ visible on dark bg
+                          color: AppColors.textLight,
                           height: 1.4,
                           fontSize: 13,
                         )),
@@ -330,7 +328,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       textInputAction: TextInputAction.next,
                       style: const TextStyle(color: AppColors.charcoal),
                       decoration: InputDecoration(
-                        labelText: 'Password',
+                        labelText: 'Password (6-8 characters)',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -383,12 +381,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // ── Login link ────────────────────────────────────────────
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       const Text('Already have an account? ',
-                          style: TextStyle(color: AppColors.textMuted)), // ✅
+                          style: TextStyle(color: AppColors.textMuted)),
                       GestureDetector(
                         onTap: widget.onLoginTap,
                         child: const Text('Sign in',
                             style: TextStyle(
-                              color: AppColors.gold, // ✅ gold not primary
+                              color: AppColors.gold,
                               fontWeight: FontWeight.w700,
                             )),
                       ),
@@ -403,7 +401,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 }
 
-// ── Reusable text field ───────────────────────────────────────────────────────
+// ── Reusable text field ────────────────────────────────_______________________
 class _Field extends StatelessWidget {
   const _Field({
     required this.controller,
@@ -422,7 +420,7 @@ class _Field extends StatelessWidget {
         controller: controller,
         keyboardType: type,
         textInputAction: action,
-        style: const TextStyle(color: AppColors.charcoal), // ✅ charcoal input text
+        style: const TextStyle(color: AppColors.charcoal),
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),

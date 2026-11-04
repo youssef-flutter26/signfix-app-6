@@ -409,6 +409,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        ), // Scaffold
-      ); // PopScope
+        ),
+      );
 }

@@ -34,14 +34,9 @@ class _RegStep3SecurityState extends State<RegStep3Security> {
       setState(() => _error = 'Password is required.');
       return false;
     }
-    if (_pass.text.length < 10) {
-      setState(() => _error = 'Password must be at least 10 characters.');
-      return false;
-    }
-    if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,72}$')
-        .hasMatch(_pass.text)) {
-      setState(() => _error =
-          'Password must include uppercase, lowercase, a number, and a special character.');
+    // تعديل طول كلمة المرور ليصبح بين 6 و 8 أحرف
+    if (_pass.text.length < 6 || _pass.text.length > 8) {
+      setState(() => _error = 'Password must be between 6 and 8 characters.');
       return false;
     }
     if (_confirm.text.isEmpty) {
@@ -131,7 +126,7 @@ class _RegStep3SecurityState extends State<RegStep3Security> {
                   SizedBox(width: 10),
                   Expanded(
                       child: Text(
-                          'Minimum 10 characters with uppercase, lowercase, number, and special character.',
+                          'Password must be between 6 and 8 characters.',
                           style: TextStyle(
                               color: AppColors.midGray, fontSize: 12))),
                 ]),
@@ -171,7 +166,7 @@ class _RegStep3SecurityState extends State<RegStep3Security> {
                 style: const TextStyle(color: AppColors.charcoal),
                 decoration: const InputDecoration(
                   labelText: 'Confirm Password *',
-                  prefixIcon: Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline),
                 ),
               ),
               const SizedBox(height: 20),
@@ -286,31 +281,20 @@ class _PasswordStrength extends StatelessWidget {
   final String password;
   int get _score {
     int s = 0;
+    if (password.length >= 6) s++;
     if (password.length >= 8) s++;
-    if (password.length >= 12) s++;
-    if (RegExp(r'[A-Z]').hasMatch(password)) s++;
-    if (RegExp(r'\d').hasMatch(password)) s++;
-    if (RegExp(r'[!@#\$%^&*]').hasMatch(password)) s++;
     return s;
   }
 
   @override
   Widget build(BuildContext context) {
     final s = _score;
-    final color = s <= 1
-        ? AppColors.danger
-        : s <= 3
-            ? AppColors.warning
-            : AppColors.success;
-    final label = s <= 1
-        ? 'Weak'
-        : s <= 3
-            ? 'Medium'
-            : 'Strong';
+    final color = s <= 1 ? AppColors.warning : AppColors.success;
+    final label = s <= 1 ? 'Medium' : 'Strong';
     return Row(children: [
       Expanded(
           child: LinearProgressIndicator(
-        value: s / 5,
+        value: s / 2,
         color: color,
         backgroundColor: AppColors.cardBorder,
         borderRadius: BorderRadius.circular(4),

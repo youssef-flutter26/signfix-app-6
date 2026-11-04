@@ -187,7 +187,7 @@ class _PhoneOtpLoginScreenState extends State<PhoneOtpLoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'We will send a one-time verification code by SMS.',
+                    'We will send a one-time verification code via WhatsApp (SMS fallback).',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.textLight),
                   ),

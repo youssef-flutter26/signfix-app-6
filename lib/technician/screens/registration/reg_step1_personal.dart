@@ -134,11 +134,7 @@ class _RegStep1PersonalState extends State<RegStep1Personal> {
   }
 
   bool _validate() {
-    if (_photoPath == null || _photoPath!.isEmpty) {
-      setState(
-          () => _error = 'Profile photo is required. Please add your photo.');
-      return false;
-    }
+    // تم إلغاء شرط إجبارية الصورة لتصبح اختيارية (Optional)
     if (_name.text.trim().isEmpty) {
       setState(() => _error = 'Full name is required.');
       return false;
@@ -228,7 +224,7 @@ class _RegStep1PersonalState extends State<RegStep1Personal> {
                   style: TextStyle(color: AppColors.midGray, fontSize: 13)),
               const SizedBox(height: 24),
 
-              // Photo
+              // Photo (Optional)
               Center(
                   child: GestureDetector(
                 onTap: _pickPhoto,
@@ -241,8 +237,8 @@ class _RegStep1PersonalState extends State<RegStep1Personal> {
                       color: AppColors.white,
                       border: Border.all(
                           color: _photoPath == null
-                              ? AppColors.danger.withValues(alpha: .7)
-                              : AppColors.gold.withValues(alpha: .4),
+                              ? AppColors.gold.withValues(alpha: .3)
+                              : AppColors.gold.withValues(alpha: .6),
                           width: 2),
                     ),
                     child: ClipOval(
@@ -269,11 +265,11 @@ class _RegStep1PersonalState extends State<RegStep1Personal> {
               Center(
                   child: Text(
                 _photoPath == null
-                    ? 'Profile Photo (Required) *'
+                    ? 'Profile Photo (Optional)'
                     : 'Profile Photo Added ✓',
                 style: TextStyle(
                     color: _photoPath == null
-                        ? AppColors.danger
+                        ? AppColors.midGray
                         : AppColors.success,
                     fontSize: 12,
                     fontWeight: FontWeight.w600),
