@@ -1102,23 +1102,24 @@ class ApiClient {
       late http.Response response;
       switch (method) {
         case 'GET':
-          response =
-              await _httpClient.get(uri, headers: headers).timeout(timeout);
+          response = await _httpClient
+              .get(uri, headers: headers)
+              .timeout(const Duration(seconds: 60));
           break;
         case 'POST':
           response = await _httpClient
               .post(uri, headers: headers, body: jsonEncode(body))
-              .timeout(timeout);
+              .timeout(const Duration(seconds: 60));
           break;
         case 'PATCH':
           response = await _httpClient
               .patch(uri, headers: headers, body: jsonEncode(body))
-              .timeout(timeout);
+              .timeout(const Duration(seconds: 60));
           break;
         case 'DELETE':
           response = await _httpClient
               .delete(uri, headers: headers, body: jsonEncode(body ?? {}))
-              .timeout(timeout);
+              .timeout(const Duration(seconds: 60));
           break;
         default:
           throw ApiException('Unsupported HTTP method: $method');

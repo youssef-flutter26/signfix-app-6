@@ -20,7 +20,7 @@ class AiChat extends StatefulWidget {
 
 class _AiChatState extends State<AiChat> {
   // All conversations: each is a Map with 'id', 'title', 'messages', 'createdAt'
-  List<Map<String, dynamic>> _conversations = [];
+  List _conversations = [];
   int _activeIdx = 0; // index into _conversations
   bool _showHistory = false;
   bool _sending = false;
@@ -37,15 +37,15 @@ class _AiChatState extends State<AiChat> {
   };
 
   static const _suggestions = [
+    'Create a 3D LED signboard design for Rameshh',
     'What sign board types do you offer?',
     'How is the price calculated?',
     'How long does delivery take?',
     'How do I track my order?',
   ];
 
-  List<Map<String, dynamic>> get _activeMessages => (_conversations.isNotEmpty)
-      ? List<Map<String, dynamic>>.from(
-          _conversations[_activeIdx]['messages'] as List)
+  get _activeMessages => (_conversations.isNotEmpty)
+      ? List.from(_conversations[_activeIdx]['messages'])
       : [Map<String, dynamic>.from(_greeting)];
 
   @override
@@ -67,7 +67,7 @@ class _AiChatState extends State<AiChat> {
     final raw = prefs.getString(_prefsKey);
     if (raw != null) {
       try {
-        final list = jsonDecode(raw) as List;
+        final list = jsonDecode(raw);
         setState(() {
           _conversations =
               list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -133,8 +133,7 @@ class _AiChatState extends State<AiChat> {
   }
 
   void _addMessage(Map<String, dynamic> msg) {
-    final msgs = List<Map<String, dynamic>>.from(
-        _conversations[_activeIdx]['messages'] as List);
+    final msgs = List.from(_conversations[_activeIdx]['messages']);
     msgs.add(msg);
     _conversations[_activeIdx]['messages'] = msgs;
 
@@ -165,11 +164,29 @@ class _AiChatState extends State<AiChat> {
       final result = await widget.api.chat(text);
       final reply = result['reply']?.toString() ??
           'I could not generate a response right now.';
-      _addMessage({'role': 'ai', 'text': reply, 'time': _timeNow()});
-    } catch (_) {
+
+      // Support all API image response variations (imageUrl, imageUrl1, image)
+      final imageUrl = result['imageUrl']?.toString() ??
+          result['imageUrl1']?.toString() ??
+          result['image']?.toString();
+
+      final hasImage = (result['hasImage'] == true) ||
+          (imageUrl != null && imageUrl.isNotEmpty);
+
       _addMessage({
         'role': 'ai',
-        'text': 'Support is unavailable right now. Please use the Service tab.',
+        'text': reply,
+        'hasImage': hasImage,
+        'imageUrl': (imageUrl != null && imageUrl.isNotEmpty) ? imageUrl : null,
+        'time': _timeNow(),
+      });
+    } catch (e, stackTrace) {
+      debugPrint('❌ AI Chat Error: $e');
+      debugPrint('📌 StackTrace: $stackTrace');
+
+      _addMessage({
+        'role': 'ai',
+        'text': 'Error: $e',
         'time': _timeNow(),
       });
     } finally {
@@ -330,26 +347,31 @@ class _AiChatState extends State<AiChat> {
           ),
         ),
 
-      // Typing indicator
+      // Typing / 3D Image Generation Loading State
       if (_sending)
         Container(
           color: AppColors.softGray,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
           child: Row(children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                   color: AppColors.white,
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: AppColors.gold.withValues(alpha: .2))),
               child: const Row(mainAxisSize: MainAxisSize.min, children: [
                 SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: AppColors.gold)),
-                SizedBox(width: 8),
-                Text('AI is typing…',
-                    style: TextStyle(color: AppColors.textLight, fontSize: 12)),
+                SizedBox(width: 10),
+                Text('Generating 3D Signboard Concept... Please wait',
+                    style: TextStyle(
+                        color: AppColors.navy,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
               ]),
             ),
           ]),
@@ -370,7 +392,8 @@ class _AiChatState extends State<AiChat> {
                 style: const TextStyle(color: AppColors.charcoal, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Ask about signs, pricing, service…',
-                  hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  hintStyle:
+                      const TextStyle(color: AppColors.textMuted, fontSize: 13),
                   filled: true,
                   fillColor: AppColors.white,
                   border: OutlineInputBorder(
@@ -383,9 +406,11 @@ class _AiChatState extends State<AiChat> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide(color: AppColors.gold.withValues(alpha: .5)),
+                    borderSide:
+                        BorderSide(color: AppColors.gold.withValues(alpha: .5)),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
               ),
             ),
@@ -407,7 +432,11 @@ class _AiChatState extends State<AiChat> {
                   shape: BoxShape.circle,
                   boxShadow: _sending
                       ? []
-                      : [BoxShadow(color: AppColors.gold.withValues(alpha: .3), blurRadius: 10)],
+                      : [
+                          BoxShadow(
+                              color: AppColors.gold.withValues(alpha: .3),
+                              blurRadius: 10)
+                        ],
                 ),
                 child: Icon(Icons.send_rounded,
                     color: _sending ? AppColors.textMuted : AppColors.navyDeep,
@@ -420,10 +449,13 @@ class _AiChatState extends State<AiChat> {
     ]);
   }
 
-  // ── Bubble ────────────────────────────────────────────────────────────────────
+  // ── Bubble with 3D Image Support ─────────────────────────────────────────────
   Widget _buildBubble(Map<String, dynamic> m) {
     final isMe = m['role'] == 'you';
     final time = m['time']?.toString() ?? '';
+    final hasImage = m['hasImage'] == true;
+    final imageUrl = m['imageUrl']?.toString();
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -473,13 +505,55 @@ class _AiChatState extends State<AiChat> {
                     border:
                         isMe ? null : Border.all(color: AppColors.cardBorder),
                   ),
-                  child: Text(
-                    m['text'] ?? '',
-                    style: TextStyle(
-                      color: isMe ? AppColors.navyDeep : AppColors.charcoal,
-                      height: 1.45,
-                      fontSize: 14,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Display image above text if generated
+                      if (hasImage &&
+                          imageUrl != null &&
+                          imageUrl.isNotEmpty) ...[
+                        GestureDetector(
+                          onTap: () => _openFullScreenImage(imageUrl),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              color: AppColors.softGray,
+                              height: 180,
+                              width: double.infinity,
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, progress) {
+                                  if (progress == null) return child;
+                                  return const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.gold),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (_, __, ___) => const Center(
+                                  child: Icon(Icons.broken_image_rounded,
+                                      color: AppColors.textMuted, size: 32),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                      Text(
+                        m['text'] ?? '',
+                        style: TextStyle(
+                          color: isMe ? AppColors.navyDeep : AppColors.charcoal,
+                          height: 1.45,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (time.isNotEmpty)
@@ -507,6 +581,34 @@ class _AiChatState extends State<AiChat> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  // Full screen image viewer helper when user taps on the generated 3D image
+  void _openFullScreenImage(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              child: Image.network(imageUrl, fit: BoxFit.contain),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded,
+                    color: Colors.white, size: 28),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -570,7 +672,7 @@ class _AiChatState extends State<AiChat> {
                     itemBuilder: (_, i) {
                       final c = _conversations[i];
                       final isActive = i == _activeIdx;
-                      final msgs = (c['messages'] as List?) ?? [];
+                      final msgs = (c['messages']) ?? [];
                       final preview = msgs.length > 1
                           ? msgs.last['text']?.toString() ?? ''
                           : 'No messages yet';

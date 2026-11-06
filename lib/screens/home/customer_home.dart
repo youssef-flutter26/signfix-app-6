@@ -9,8 +9,6 @@ import '../ai/ai_chat.dart';
 import '../notifications/notifications_screen.dart';
 import '../orders/order_detail_screen.dart';
 import '../orders/order_wizard.dart';
-import '../orders/power_supply_screen.dart';
-import '../orders/signage_designer_screen.dart';
 import '../profile/profile_screen.dart';
 import '../service/service_request.dart';
 
@@ -26,7 +24,6 @@ class _CustomerHomeState extends State<CustomerHome> {
   int _index = 0;
   late final List<Widget> _pages;
   final _promotionBannerNotifier = ValueNotifier<String?>(null);
-  // Notifier to switch ActivityScreen tab (0=orders, 1=services)
   final _trackTabNotifier = ValueNotifier<int>(0);
   final _trackRefreshNotifier = ValueNotifier<int>(0);
   void _goTo(int i) => setState(() => _index = i);
@@ -38,55 +35,18 @@ class _CustomerHomeState extends State<CustomerHome> {
   @override
   void initState() {
     super.initState();
-    // ✅ FIX: pages ek baar banao — har setState pe recreate nahi hongi
     _pages = [
       _Dashboard(
           api: widget.api,
           onOrder: _goToOrder,
           onBannerOrder: (bannerId) {
-            // Banner 2 → Signage Design Studio (full custom screen)
-            if (bannerId == 'home_banner_2') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SignageDesignerScreen(
-                    api: widget.api,
-                    promotionBannerId: bannerId,
-                    onOrderSubmitted: () {
-                      _goTo(3);
-                      _trackRefreshNotifier.value++;
-                    },
-                  ),
-                ),
-              );
-              return;
-            }
-            // Banner 3 → Power Supply & Drivers catalog
-            if (bannerId == 'home_banner_3') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PowerSupplyScreen(
-                    api: widget.api,
-                    promotionBannerId: bannerId,
-                    onOrderSubmitted: () {
-                      _goTo(3);
-                      _trackRefreshNotifier.value++;
-                    },
-                  ),
-                ),
-              );
-              return;
-            }
-            // Banner 1 (and any other banners) → standard OrderWizard with cashback
             _promotionBannerNotifier.value = bannerId;
             _goTo(1);
           },
           onService: () => _goTo(2),
           onLogout: widget.onLogout,
           onGoToTrack: (tab) {
-            _goTo(3); // go to Track tab
-            // Pass tab index via a short delay so Track screen builds first
+            _goTo(3);
             Future.delayed(const Duration(milliseconds: 100), () {
               _trackTabNotifier.value = tab;
             });
@@ -120,8 +80,6 @@ class _CustomerHomeState extends State<CustomerHome> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // If on home tab (0) → allow app to minimize naturally
-      // If on any other tab → go back to home tab
       canPop: _index == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && _index != 0) {
@@ -234,12 +192,11 @@ class _CustomerHomeState extends State<CustomerHome> {
             ),
           ),
         ),
-      ), // close Scaffold
-    ); // close PopScope
+      ),
+    );
   }
 }
 
-// ── Notification Bell ─────────────────────────────────────────────────────────
 class _NotificationBell extends StatefulWidget {
   const _NotificationBell({required this.api});
   final ApiClient api;
@@ -301,7 +258,6 @@ class _NotificationBellState extends State<_NotificationBell> {
       ]);
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
 class _Dashboard extends StatefulWidget {
   const _Dashboard(
       {required this.api,
@@ -314,7 +270,7 @@ class _Dashboard extends StatefulWidget {
   final VoidCallback onOrder;
   final ValueChanged<String> onBannerOrder;
   final VoidCallback onService;
-  final void Function(int tabIndex) onGoToTrack; // 0=orders, 1=services
+  final void Function(int tabIndex) onGoToTrack;
   final VoidCallback onLogout;
   @override
   State<_Dashboard> createState() => _DashboardState();
@@ -389,7 +345,6 @@ class _DashboardState extends State<_Dashboard> {
     ]);
   }
 
-  // ── Auth-aware error widget (embedded in home dashboard) ─────────────────
   Widget _errorWidget(Object error) {
     final errMsg = error.toString();
     final isAuthError = errMsg.toLowerCase().contains('authentication') ||
@@ -456,7 +411,6 @@ class _DashboardState extends State<_Dashboard> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
           children: [
-            // ── Promo Banner Slider ─────────────────────────────────────────────
             _PromoBannerSlider(
               controller: _bannerCtrl,
               banners: _banners,
@@ -464,18 +418,15 @@ class _DashboardState extends State<_Dashboard> {
               onPageChanged: (i) => setState(() => _bannerPage = i),
               onBannerTap: (bannerId) => widget.onBannerOrder(bannerId),
             ),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Greeting with animated text ──────────────────────────────────
                     FutureBuilder<Map<String, dynamic>?>(
                       future: _profileFuture,
                       builder: (_, snap) {
                         if (snap.hasError) return _errorWidget(snap.error!);
-                        // Show first name only — strip "Demo" if default
                         String name = snap.data?['name']?.toString() ?? '';
                         if (name.isEmpty || name == 'Demo Customer') {
                           name = 'there';
@@ -497,7 +448,6 @@ class _DashboardState extends State<_Dashboard> {
                                         color: AppColors.navy)),
                               ]),
                               const SizedBox(height: 6),
-                              // Animated rotating sub-text
                               SizedBox(
                                 height: 22,
                                 child: AnimatedTextKit(
@@ -530,8 +480,6 @@ class _DashboardState extends State<_Dashboard> {
                       },
                     ),
                     const SizedBox(height: 18),
-
-                    // ── Quick Stats ──────────────────────────────────────────────────
                     FutureBuilder<List<dynamic>>(
                       future: _ordersFuture,
                       builder: (_, oSnap) => FutureBuilder<List<dynamic>>(
@@ -567,8 +515,6 @@ class _DashboardState extends State<_Dashboard> {
                       ),
                     ),
                     const SizedBox(height: 22),
-
-                    // ── Action Cards ──────────────────────────────────────────────────
                     _ActionCard(
                       title: 'Order New Sign Board',
                       subtitle:
@@ -587,8 +533,6 @@ class _DashboardState extends State<_Dashboard> {
                       onTap: widget.onService,
                     ),
                     const SizedBox(height: 24),
-
-                    // ── Recent Orders ─────────────────────────────────────────────────
                     const Text('Recent Activity',
                         style: TextStyle(
                             fontSize: 16,
@@ -681,8 +625,6 @@ class _DashboardState extends State<_Dashboard> {
                         );
                       },
                     ),
-
-                    // ── How it works ──────────────────────────────────────────────────
                     const SizedBox(height: 24),
                     const Text('How SignFix Works',
                         style: TextStyle(
@@ -721,7 +663,6 @@ class _DashboardState extends State<_Dashboard> {
                       ),
                     ].map((e) =>
                         _HowItWorksRow(e.$1, e.$2, e.$3, e.$4, onTap: e.$5)),
-
                     const SizedBox(height: 30),
                   ]),
             ),
@@ -730,7 +671,6 @@ class _DashboardState extends State<_Dashboard> {
       );
 }
 
-// ── Promo Banner Slider ───────────────────────────────────────────────────────
 class _PromoBannerSlider extends StatelessWidget {
   const _PromoBannerSlider({
     required this.controller,
@@ -745,11 +685,10 @@ class _PromoBannerSlider extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
   final ValueChanged<String> onBannerTap;
 
-  // ── Per-banner badge config (Matched 100% precisely with Sumit's instructions) ──
   static Map<String, ({IconData icon, String label, Color color})> _badgeConfig(
       String id) {
     switch (id) {
-      case 'home_banner_1': // Neon Banner -> "use shop button"
+      case 'home_banner_1':
         return {
           'top': (
             icon: Icons.savings_outlined,
@@ -762,7 +701,7 @@ class _PromoBannerSlider extends StatelessWidget {
             color: AppColors.gold
           ),
         };
-      case 'home_banner_2': // Signage Banner -> "use design button"
+      case 'home_banner_2':
         return {
           'top': (
             icon: Icons.palette_outlined,
@@ -775,7 +714,7 @@ class _PromoBannerSlider extends StatelessWidget {
             color: AppColors.gold
           ),
         };
-      case 'home_banner_3': // Power Supply Banner -> "use last button that's going on pending"
+      case 'home_banner_3':
       default:
         return {
           'top': (
@@ -812,7 +751,6 @@ class _PromoBannerSlider extends StatelessWidget {
                     borderRadius: BorderRadius.circular(0),
                     child: Stack(fit: StackFit.expand, children: [
                       Image.asset(banners[i].asset, fit: BoxFit.cover),
-                      // Dark overlay at bottom
                       Positioned(
                         bottom: 0,
                         left: 0,
@@ -831,7 +769,6 @@ class _PromoBannerSlider extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Top-left badge (cashback / category label)
                       Positioned(
                         top: 14,
                         left: 14,
@@ -866,7 +803,6 @@ class _PromoBannerSlider extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Bottom-right CTA badge
                       Positioned(
                         bottom: 12,
                         right: 16,
@@ -905,7 +841,6 @@ class _PromoBannerSlider extends StatelessWidget {
             },
           ),
         ),
-        // Dot indicators
         const SizedBox(height: 10),
         Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -927,12 +862,10 @@ class _PromoBannerSlider extends StatelessWidget {
 
 class _PromoBanner {
   const _PromoBanner({required this.id, required this.asset});
-
   final String id;
   final String asset;
 }
 
-// ── Stat Tile ─────────────────────────────────────────────────────────────────
 class _StatTile extends StatelessWidget {
   const _StatTile(this.value, this.label, this.color, this.icon, {this.onTap});
   final String value, label;
@@ -980,7 +913,6 @@ class _StatTile extends StatelessWidget {
       );
 }
 
-// ── Action Card ───────────────────────────────────────────────────────────────
 class _ActionCard extends StatelessWidget {
   const _ActionCard(
       {required this.title,
@@ -1038,7 +970,6 @@ class _ActionCard extends StatelessWidget {
       );
 }
 
-// ── Status Badge ──────────────────────────────────────────────────────────────
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge(this.status);
   final String status;
@@ -1074,7 +1005,6 @@ class _StatusBadge extends StatelessWidget {
       );
 }
 
-// ── How It Works Row ──────────────────────────────────────────────────────────
 class _HowItWorksRow extends StatelessWidget {
   const _HowItWorksRow(this.icon, this.color, this.title, this.subtitle,
       {this.onTap});
@@ -1134,7 +1064,6 @@ class _HowItWorksRow extends StatelessWidget {
       );
 }
 
-// ── Custom Nav Item ───────────────────────────────────────────────────────────
 class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.icon,

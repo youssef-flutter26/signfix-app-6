@@ -30,45 +30,13 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _emailError;
   String? _passwordError;
   bool _showRegister = false;
-  bool _googleLoading = false;
+  // تم الاستغناء مؤقتاً عن _googleLoading لعدم الحاجة لزر جوجل حالياً
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
     super.dispose();
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _googleLoading = true;
-      _error = null;
-    });
-    try {
-      final res = await AuthService.signInWithGoogle(role: 'customer');
-      if (res == null) {
-        // User cancelled account picker
-        return;
-      }
-      final String? token = res['token']?.toString();
-      if (token != null && token.isNotEmpty) {
-        await widget.api.saveSession(
-          token,
-          email: res['user']?['email']?.toString(),
-        );
-        widget.onAuthenticated();
-      } else {
-        throw Exception('Token not received from server');
-      }
-    } catch (e) {
-      if (mounted) {
-        final str = e.toString().replaceFirst('Exception: ', '');
-        setState(() => _error = str);
-      }
-    } finally {
-      if (mounted) setState(() => _googleLoading = false);
-    }
   }
 
   Future<void> _submit() async {
@@ -317,49 +285,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         loading: _loading,
                         onPressed: _submit,
                         child: const Text('Sign In')),
-                    const SizedBox(height: 14),
-                    const Row(children: [
-                      Expanded(child: Divider(color: Color(0xFFE2E8F0))),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('OR',
-                            style: TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600)),
-                      ),
-                      Expanded(child: Divider(color: Color(0xFFE2E8F0))),
-                    ]),
-                    const SizedBox(height: 14),
-                    GoogleSignInButton(
-                      loading: _googleLoading,
-                      label: 'Continue with Google',
-                      onPressed: _loading ? null : _handleGoogleSignIn,
-                    ),
 
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: _loading || _googleLoading
-                          ? null
-                          : () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PhoneOtpLoginScreen(
-                                    authenticate: (idToken, name) =>
-                                        widget.api.loginWithFirebasePhone(
-                                      idToken: idToken,
-                                      name: name,
-                                    ),
-                                    onAuthenticated: widget.onAuthenticated,
-                                  ),
-                                ),
-                              ),
-                      icon: const Icon(Icons.phone_android),
-                      label: const Text('Continue with phone'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                      ),
-                    ),
+                    // تم إخفاء زرار جوجل، هاتف، والـ OR بناءً على طلب الفريق
 
                     const SizedBox(height: 10),
 
@@ -395,7 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ), // Scaffold closes here (child of PopScope)
+      ), // Scaffold closes here
     ); // PopScope closes here
   } // build
 } // _LoginScreenState
